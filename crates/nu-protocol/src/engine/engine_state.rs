@@ -21,6 +21,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, AtomicU32, Ordering},
+        mpsc::Sender,
         Arc, Mutex, MutexGuard, PoisonError,
     },
 };
@@ -110,7 +111,7 @@ pub struct EngineState {
     startup_time: i64,
     is_debugging: IsDebugging,
     pub debugger: Arc<Mutex<Box<dyn Debugger>>>,
-    pub reedline_event_queue: Arc<Mutex<Vec<ReedlineEvent>>>,
+    pub reedline_event_sender: Option<Sender<ReedlineEvent>>,
 }
 
 // The max number of compiled regexes to keep around in a LRU cache, arbitrarily chosen
@@ -180,7 +181,7 @@ impl EngineState {
             startup_time: -1,
             is_debugging: IsDebugging::new(false),
             debugger: Arc::new(Mutex::new(Box::new(NoopDebugger))),
-            reedline_event_queue: Arc::new(vec![].into()),
+            reedline_event_sender: None,
         }
     }
 
